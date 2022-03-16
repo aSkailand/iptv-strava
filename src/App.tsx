@@ -1,49 +1,60 @@
 import React, { useState, useEffect } from "react";
-import logo from "./logo.svg";
 import "./App.css";
-import { Activity } from "./interfaces";
 
 const App: React.FC<{}> = () => {
-  const [clubActivities, setClubActivities] = useState<Activity[]>([]);
-  const [fetching, setFetching] = useState(true);
-  const [page, setPage] = useState(1);
+  const [fetchingStats, setFetching] = useState(true);
+  const [fetchingInfo, setFetchingInfo] = useState(true);
+  const [atheleteStats, setAthleteStats] = useState({});
+  const [atheleteInfo, setAtheleteInfo] = useState({});
 
   useEffect(() => {
-    while (fetching && page < 10) {
-      fetch(
-        `https://www.strava.com/api/v3/clubs/1008526/activities?page=${page}`,
+    try {
+      const request = fetch(
+        `https://www.strava.com/api/v3/athletes/46439477/stats`,
         {
           method: "GET",
           headers: {
-            authorization: "Bearer 4feb30660b8d39a6ab0c8e6037b7f501699d870a",
+            Authorization: "Bearer c9fa92ce2dcd72923680183bcabc75143752f54b",
           },
         }
-      )
-        .then((response) => response.json())
-        .then((activities: Activity[]) => {
-          if (activities.length > 0) {
-            setFetching(false);
-          }
-          setClubActivities([...clubActivities, ...activities]);
-        });
-      setPage(page + 1);
+      );
+      let stravaData = request.then((response) => response.json());
+      stravaData.then((data) => {
+        setAthleteStats(data);
+        setFetching(false);
+      });
+    } catch (error) {
+      console.error(error);
     }
-  }, [fetching, clubActivities, page]);
+  }, [fetchingStats]);
+
+  useEffect(() => {
+    try {
+      const request = fetch(`https://www.strava.com/api/v3/athlete`, {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer c9fa92ce2dcd72923680183bcabc75143752f54b",
+        },
+      });
+      let stravaData = request.then((response) => response.json());
+      stravaData.then((data) => {
+        setAtheleteInfo(data);
+        setFetchingInfo(false);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }, [fetchingInfo]);
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+          {fetchingStats ? "Loading strava data..." : "Strava athlete obtained"}
+          {fetchingInfo
+            ? "Loading strava athlete info"
+            : "Strava athlete info obtained"}
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <p></p>
       </header>
     </div>
   );
